@@ -1,0 +1,55 @@
+utils.loadPlatform("ti.platforms.dsk6713");
+
+/* The following DSP/BIOS Features are enabled.  */
+bios.enableRealTimeAnalysis(prog);
+bios.enableRtdx(prog);
+bios.enableTskManager(prog);
+
+bios.MEM.STACKSIZE = 0x4000;
+bios.MEM.NOMEMORYHEAPS = 0;
+bios.MEM.instance("SDRAM").createHeap = 1;
+bios.MEM.BIOSOBJSEG = prog.get("SDRAM");
+bios.MEM.MALLOCSEG = prog.get("SDRAM");
+bios.MEM.instance("IRAM").len = 0x0003e000;
+bios.SWI.create("process_ping");
+bios.SWI.instance("process_ping").order = 1;
+bios.SWI.instance("process_ping").fxn = prog.extern("SWI_process_ping");
+bios.SWI.instance("process_ping").priority = 4;
+bios.SWI.instance("process_ping").comment = "process ping";
+bios.SWI.instance("process_ping").fxn = prog.extern("process_ping_SWI");
+bios.SWI.instance("PRD_swi").order = 1;
+bios.SWI.instance("KNL_swi").order = 2;
+bios.SWI.instance("process_ping").destroy();
+bios.SWI.create("SWI_process_ping");
+bios.SWI.instance("SWI_process_ping").order = 4;
+bios.SWI.instance("SWI_process_ping").comment = "process ping";
+bios.SWI.instance("SWI_process_ping").priority = 4;
+bios.SWI.instance("SWI_process_ping").fxn = prog.extern("process_ping_SWI");
+bios.SWI.create("SWI_process_pong");
+bios.SWI.instance("SWI_process_pong").order = 5;
+bios.SWI.instance("SWI_process_pong").priority = 4;
+bios.SWI.instance("SWI_process_pong").fxn = prog.extern("process_pong_SWI");
+bios.SWI.instance("SWI_process_pong").priority = 5;
+bios.SEM.create("SEM_LEDToggle");
+bios.SEM.instance("SEM_LEDToggle").count = 1;
+bios.MEM.create("MYMEM");
+bios.MEM.instance("MYMEM").base = 0x0003e000;
+bios.MEM.instance("MYMEM").len = 0x00002000;
+bios.MEM.instance("MYMEM").createHeap = 0;
+bios.SWI.create("LED_Toggle");
+bios.SWI.instance("LED_Toggle").order = 6;
+bios.SWI.instance("LED_Toggle").priority = 5;
+bios.SWI.instance("LED_Toggle").fxn = prog.extern("SWI_LEDToggle");
+bios.HWI.instance("HWI_INT8").fxn = prog.extern("EDMA_interrupt_service");
+bios.HWI.instance("HWI_INT8").useDispatcher = 1;
+bios.SWI.instance("SWI_process_ping").order = 3;
+bios.SWI.instance("SWI_process_pong").order = 4;
+bios.SWI.instance("LED_Toggle").destroy();
+bios.PRD.create("PRD_LEDToggle");
+bios.PRD.instance("PRD_LEDToggle").order = 1;
+bios.PRD.instance("PRD_LEDToggle").period = 1000;
+bios.PRD.instance("PRD_LEDToggle").fxn = prog.extern("SWI_LEDToggle");
+bios.CLK.instance("PRD_clock").order = 1;
+// !GRAPHICAL_CONFIG_TOOL_SCRIPT_INSERT_POINT!
+
+prog.gen();
